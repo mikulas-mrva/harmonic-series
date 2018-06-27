@@ -82,9 +82,9 @@ var voices;
     (function() {
         var url = new URL(window.location.href);
         var gain_param = url.searchParams.get("gain") || 0.5;
-        var partial_list = url.searchParams.get("partial_list");
+        var partial_list = url.searchParams.get("partial_list") || "";
         var waveform = url.searchParams.get("waveform") || "sine";
-        var base_freq = url.searchParams.get("base_freq");
+        var base_freq = url.searchParams.get("base_freq") || 440;
 
         var freq_list = partial_list.split(":").map(function(partial, i) {
             return (partial/(partial_list[0]||1))*base_freq;
