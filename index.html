@@ -1,0 +1,112 @@
+<html>
+<head>
+</head>
+<body>
+<script>
+/* 
+TODO:
+* INTERFACE
+* interface defaults
+* rewrite as a class
+* curves on chain changes
+
+*/
+
+// create web audio api context
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+var make_voices = function(audioCtx, num_voices) {
+
+    return [...Array(5)].map(function() { 
+        voice = {
+            osc: audioCtx.createOscillator(),
+            gain: audioCtx.createGain(),
+        }
+        voice.osc.connect(voice.gain);
+
+        voice.gain.gain.value = 0;
+        voice.gain.connect(audioCtx.destination);
+
+        voice.osc.start();
+        return voice;
+    })
+}
+
+var set_waveform = function(voices, waveform) {
+    voices.forEach(function(voice){
+        voice.osc.type = waveform;
+    })
+}
+
+var set_frequencies = function(voices, freq_array) {
+    voices.forEach(function(voice, i){
+        voice.osc.frequency.setValueAtTime(freq_array[i] || 0, audioCtx.currentTime);
+    });
+}
+
+var stop_all = function(voices, freq_array) {
+    voices.forEach(function(voice){
+        voice.osc.stop();
+    });
+}
+
+var set_gain = function(voices, gain) {
+    if (Array.isArray(gain)) {
+        voices.forEach(function(voice, i){
+            voice.gain.gain.value = gain[i] || 0;
+        })
+    } else {
+        voices.forEach(function(voice){
+            voice.gain.gain.value = gain || 0;
+        })
+    }
+}
+
+var voices;
+
+</script>
+<form id="voice-control">
+    <ul>
+        <li>Base frequency (Hz): <input id="base_freq" name="base_freq"></li>
+        <li>Partial list (1:2:3...):<input id="partial_list" name="partial_list" type="text" /></li>
+        <li>Gain (0-1):<input id="gain" name="gain" type="number" step="any" min="0" /></li>
+
+        <li><input type="radio" id="wave_sine" name="waveform" value="sine"> Sine wave</li>
+        <li><input type="radio" id="wave_triangle" name="waveform" value="triangle"> Triangle wave</li>
+        <li><input type="radio" id="wave_square" name="waveform" value="square"> Square wave</li>
+        <li><input type="radio" id="wave_sawtooth" name="waveform" value="sawtooth"> Sawtooth wave</li>
+    </ul>
+    <input type="submit" />
+</form>
+<script type="text/javascript">
+    (function() {
+        var url = new URL(window.location.href);
+        var gain_param = url.searchParams.get("gain") || 0.5;
+        var partial_list = url.searchParams.get("partial_list");
+        var waveform = url.searchParams.get("waveform") || "sine";
+        var base_freq = url.searchParams.get("base_freq");
+
+        var freq_list = partial_list.split(":").map(function(partial, i) {
+            return (partial/(partial_list[0]||1))*base_freq;
+        })
+
+        // set oscillator parameters
+        var num_voices = freq_list.length;
+        var gain = (1/num_voices)*gain_param;
+        // create Oscillator nodes
+        voices = make_voices(audioCtx, num_voices);
+
+        set_waveform(voices, waveform);
+        set_frequencies(voices, freq_list);
+        set_gain(voices, gain);
+
+        // set values according to GET params
+        document.getElementById("gain").value = gain_param;
+        document.getElementById("base_freq").value = base_freq;
+        document.getElementById("partial_list").value = partial_list;
+        document.getElementById("wave_"+waveform).checked = "checked";
+    })();
+
+</script> 
+</body>
+</html>
