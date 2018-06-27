@@ -1,15 +1,14 @@
 <html>
 <head>
+    <title>Harmonic series explorer</title>
 </head>
 <body>
 <script>
 /* 
 TODO:
-* INTERFACE
-* interface defaults
 * rewrite as a class
-* curves on chain changes
-
+* curves on gain changes
+* dynamic updates
 */
 
 // create web audio api context
@@ -17,7 +16,7 @@ var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 var make_voices = function(audioCtx, num_voices) {
 
-    return [...Array(5)].map(function() { 
+    return [...Array(num_voices)].map(function() { 
         voice = {
             osc: audioCtx.createOscillator(),
             gain: audioCtx.createGain(),
